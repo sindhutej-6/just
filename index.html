@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Birthday Countdown 🎉</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: black;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 3rem;
+        color: #ffcc00;
+        text-shadow: 0 0 10px #ffcc00;
+        z-index: 2;
+    }
+
+    #countdown {
+        font-size: 2.2rem;
+        margin-top: 10px;
+        font-weight: bold;
+        z-index: 2;
+    }
+
+    /* Flying Birthday Text */
+    .fly-text {
+        position: absolute;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #ff66ff;
+        text-shadow: 0 0 15px #ff00ff;
+        white-space: nowrap;
+        pointer-events: none;
+        animation: fly 4s linear forwards;
+    }
+
+    /* 4 Direction Animations */
+    @keyframes fly {
+        from { transform: translate(var(--start-x), var(--start-y)); opacity: 0; }
+        50% { opacity: 1; }
+        to { transform: translate(0, 0); opacity: 0; }
+    }
+</style>
+</head>
+<body>
+
+<h1>🎉 Birthday Countdown 🎉</h1>
+<div id="countdown">Loading...</div>
+
+<canvas id="fireworks"></canvas>
+
+<script>
+// ---------------------- FIREWORKS ----------------------
+const canvas = document.getElementById('fireworks');
+const ctx = canvas.getContext('2d');
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+class Firework {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height;
+        this.targetY = Math.random() * (canvas.height / 2);
+        this.speed = 5;
+        this.boom = false;
+        this.particles = [];
+    }
+
+    update() {
+        if (!this.boom) {
+            this.y -= this.speed;
+            if (this.y <= this.targetY) {
+                this.boom = true;
+                this.createParticles();
+            }
+        }
+        this.draw();
+    }
+
+    draw() {
+        if (!this.boom) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = "white";
+            ctx.fill();
+        }
+
+        this.particles.forEach(p => p.update());
+    }
+
+    createParticles() {
+        for (let i = 0; i < 50; i++) {
+            this.particles.push(new Particle(this.x, this.y));
+        }
+    }
+}
+
+class Particle {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.speed = Math.random() * 4 + 1;
+        this.angle = Math.random() * 2 * Math.PI;
+        this.alpha = 1;
+    }
+
+    update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.alpha -= 0.02;
+
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "hsl(" + Math.random() * 360 + ",100%,50%)";
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+let fireworks = [];
+function animate() {
+    requestAnimationFrame(animate);
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (Math.random() < 0.06) {
+        fireworks.push(new Firework());
+    }
+
+    fireworks.forEach((f, i) => {
+        f.update();
+        if (f.boom && f.particles.every(p => p.alpha <= 0)) {
+            fireworks.splice(i, 1);
+        }
+    });
+}
+animate();
+
+
+// ---------------------- COUNTDOWN ----------------------
+function updateCountdown() {
+    const birthday = new Date("December 10, 2025 00:00:00").getTime();
+    const now = new Date().getTime();
+    const diff = birthday - now;
+
+    if (diff <= 0) {
+        document.getElementById("countdown").innerHTML = "🎂 Happy Birthday Deepu! 🎉";
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
+
+    document.getElementById("countdown").innerHTML =
+        `${days} Days ${hrs} Hours ${mins} Minutes ${secs} Seconds to go 🎂`;
+}
+setInterval(updateCountdown, 1000);
+
+
+// ---------------------- FLYING "HAPPY BIRTHDAY DEEPU" TEXT ----------------------
+function spawnFlyingText() {
+    const text = document.createElement("div");
+    text.className = "fly-text";
+    text.innerText = "🎉 Happy Birthday Deepu 🎉";
+
+    // Random direction
+    const directions = [
+        ["-300px", "0px"],    // Left
+        ["300px", "0px"],     // Right
+        ["0px", "-200px"],    // Top
+        ["0px", "200px"]      // Bottom
+    ];
+    const randomDir = directions[Math.floor(Math.random() * directions.length)];
+
+    text.style.setProperty("--start-x", randomDir[0]);
+    text.style.setProperty("--start-y", randomDir[1]);
+
+    text.style.left = (window.innerWidth / 2 - 150) + "px";
+    text.style.top = (window.innerHeight / 2 - 20) + "px";
+
+    document.body.appendChild(text);
+
+    setTimeout(() => text.remove(), 4000);
+}
+
+setInterval(spawnFlyingText, 2000);
+</script>
+
+</body>
+</html>
